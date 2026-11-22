@@ -24,6 +24,33 @@ export type DecisionInfo = {
   swap: boolean
 }
 
+/** tunables; BOT_PARAMS (JSON env) overrides them for local A/B only — matches never set it */
+export const P = {
+  provoke: 1, // 1: don't shoot mechs that are not engaging us (unless close or weak)
+  provokeR: 50,
+  retreatHp: 0.33,
+  returnHp: 0.75,
+  gunLo: 40,
+  gunHi: 70,
+  laserLo: 55,
+  laserHi: 110,
+  laserLoot: 180,
+  lootEnemyR: 90,
+  flipMin: 0.25,
+  flipVar: 0.45,
+  strafeW: 7,
+  hunt: 1,
+  fightMax: 240,
+  avoid: 0, // 1: steer away from mechs that are not engaging us
+  avoidR: 70,
+  avoidW: 3,
+  outHp: 0.5, // retreat with 2+ attackers in LOS below this hp fraction
+}
+try {
+  const env = (globalThis as any).process?.env?.BOT_PARAMS
+  if (env) Object.assign(P, JSON.parse(env))
+} catch {}
+
 const WEAPON_VALUE: Record<string, number> = { laser: 6, lightning: 2.6, mortar: 1.2, gun: 2 }
 const UPGRADE_ORDER = [
   "laser_damage", "laser_charge", "armor", "plating", "gun_rate", "gun_damage", "nanites", "gun_mag",
@@ -53,6 +80,8 @@ export class Brain {
   escapeDir: Vec2 = [1, 0]
   lastSound: { bearing: number; t: number } | null = null
   scanPhase = 0
+  hurtBy = new Map<number, number>()
+  hitOn = new Map<number, number>()
 
   constructor(public hello: Hello, public world: World, public nav: Nav) {
     this.rng = (hello.seed >>> 0) || 12345
@@ -146,11 +175,13 @@ export class Brain {
         this.lastHitAt = o.t
         if (e.by !== null && e.by !== undefined) {
           this.lastHitBy = e.by
+          this.hurtBy.set(e.by, o.t)
           if (!visibleIds.has(e.by)) this.lastHitByUnseen = o.t
         }
         if (e.bearing !== null && e.bearing !== undefined) this.lastHitBearing = e.bearing
       } else if (e.type === "hit") {
         this.lastDealt = o.t
+        this.hitOn.set(e.target, o.t)
       } else if (e.type === "took") {
         this.pickups.delete(e.id)
       } else if (e.type === "kill") {
@@ -197,6 +228,7 @@ export class Brain {
       }
       if (!v.seen && o.t - v.last > 2) continue
       if (d > 300) continue
+      if (P.provoke && a.kind === "mech" && !this.engaging(o, a)) continue
       const maxHp = a.max_hp ?? 1400
       const hpFrac = a.hp === undefined ? 1 : a.hp / maxHp
       let s = (v.los ? 60 : 0) + (1 - hpFrac) * 45 - d * 0.18
@@ -210,6 +242,17 @@ export class Brain {
     }
     this.target = id
     return id === null ? null : this.tracks.get(id)!.actor
+  }
+
+  engaging(o: Observation, a: ActorObs) {
+    const d = dist(a.pos, o.self.pos)
+    if (o.t - (this.hurtBy.get(a.id) ?? -99) < 10 || o.t - (this.hitOn.get(a.id) ?? -99) < 7) return true
+    if (d < P.provokeR) return true
+    if (a.hp !== undefined && a.hp < 0.35 * (a.max_hp ?? 1400)) return true
+    const toUs = Math.atan2(o.self.pos[1] - a.pos[1], o.self.pos[0] - a.pos[0])
+    if (d < 170 && Math.abs(wrap(a.aim[0] - toUs)) < 0.25) return true
+    const closing = a.vel[0] * Math.cos(toUs) + a.vel[1] * Math.sin(toUs)
+    return d < 130 && closing > 3
   }
 
   isRear(o: Observation, a: ActorObs) {
@@ -323,11 +366,11 @@ export class Brain {
     const hasEmpty = me.weapons.some((w) => !w)
     let best: { goal: Vec2; mode: string; boost: boolean } | null = null
     let bestScore = -Infinity
-    if (!this.enemyNear(o, me.pos, 90)) {
+    if (!this.enemyNear(o, me.pos, P.lootEnemyR)) {
       for (const p of this.pickups.values()) {
         if (!this.wantPickup(o, p.kind) || !this.reachable(p.pos)) continue
         const d = dist(p.pos, me.pos)
-        const lim = p.kind === "laser" && sec.kind !== "laser" ? 180 : hasEmpty ? 120 : 70
+        const lim = p.kind === "laser" && sec.kind !== "laser" ? P.laserLoot : hasEmpty ? 120 : 70
         if (d > lim) continue
         const s = (WEAPON_VALUE[p.kind] ?? 0) * 30 - d
         if (s > bestScore) {
@@ -365,18 +408,18 @@ export class Brain {
     const bearing = Math.atan2(tgt.pos[1] - pos[1], tgt.pos[0] - pos[0])
     const sec = this.secondary(o).kind
     const tgtMortar = (tgt.weapons ?? []).includes("mortar")
-    let lo = 40
-    let hi = 70
+    let lo = P.gunLo
+    let hi = P.gunHi
     if (sec === "laser") {
-      lo = 55
-      hi = 110
+      lo = P.laserLo
+      hi = P.laserHi
     } else if (sec === "lightning" && !tgtMortar) {
       lo = 12
       hi = 34
     }
     if (o.t >= this.flipAt) {
       this.strafe *= -1
-      this.flipAt = o.t + 0.25 + this.random() * 0.45
+      this.flipAt = o.t + P.flipMin + this.random() * P.flipVar
     }
     const lightRange = this.cfg.weapons?.lightning?.range ?? 45
     const others = this.enemies().filter((v) => v.actor.id !== tgt.id && o.t - v.last < 5)
@@ -391,7 +434,7 @@ export class Brain {
       let s = 0
       if (nd < lo) s -= (lo - nd) * 1.2
       if (nd > hi) s -= (nd - hi) * 1.2
-      s += 7 * Math.sin(h - bearing) * this.strafe
+      s += P.strafeW * Math.sin(h - bearing) * this.strafe
       for (const a of all) {
         if (!(a.weapons ?? []).includes("lightning")) continue
         if (sec === "lightning" && a.id === tgt.id && !tgtMortar) continue
@@ -403,6 +446,35 @@ export class Brain {
         if (ed < 60) s -= (60 - ed) * 0.4
       }
       if (!this.inZoneSoon(o, q)) s -= 30
+      if (s > best) {
+        best = s
+        bh = h
+      }
+    }
+    return [Math.cos(bh), Math.sin(bh)]
+  }
+
+  /** bend the intended move away from mechs that are not (yet) engaging us, so we don't wake them */
+  avoidSteer(o: Observation, move: Vec2, targetId: number | null): Vec2 {
+    const me = o.self
+    const pos: Vec2 = [me.pos[0], me.pos[1]]
+    const near = this.enemies().filter((v) => v.actor.id !== targetId && o.t - v.last < 5 && dist(v.actor.pos, pos) < P.avoidR && !this.engaging(o, v.actor))
+    if (!near.length) return move
+    const mlen = Math.hypot(move[0], move[1])
+    const mh = Math.atan2(move[1], move[0])
+    let best = -Infinity
+    let bh = mh
+    for (let i = 0; i < 16; i++) {
+      const h = (i * TAU) / 16
+      if (!this.headingOk(pos, h)) continue
+      const q: Vec2 = [pos[0] + Math.cos(h) * 6, pos[1] + Math.sin(h) * 6]
+      let s = mlen > 0.1 ? Math.cos(h - mh) * 2 : 0
+      for (const v of near) {
+        const now = dist(pos, v.actor.pos)
+        const nxt = dist(q, v.actor.pos)
+        s += ((nxt - now) / 6) * P.avoidW * (1 - now / P.avoidR)
+      }
+      if (!this.inZoneSoon(o, q)) s -= 5
       if (s > best) {
         best = s
         bh = h
@@ -487,8 +559,8 @@ export class Brain {
     const hpFrac = me.hp / me.max_hp
     const losFoes = this.enemies().filter((v) => v.los && dist(v.actor.pos, me.pos) < 230)
     const weakTarget = !!losTarget && losTarget.kind === "mech" && losTarget.hp !== undefined && losTarget.hp < 0.3 * (losTarget.max_hp ?? 1400) && dist(losTarget.pos, me.pos) < 90
-    if (this.retreating && hpFrac > 0.75) this.retreating = false
-    if (!this.retreating && (hpFrac < 0.33 || (losFoes.length >= 2 && hpFrac < 0.5)) && !weakTarget) this.retreating = true
+    if (this.retreating && hpFrac > P.returnHp) this.retreating = false
+    if (!this.retreating && (hpFrac < P.retreatHp || (losFoes.length >= 2 && hpFrac < P.outHp)) && !weakTarget) this.retreating = true
     const retreat = this.retreating && !weakTarget
 
     // ------------------------------------------------ movement
@@ -514,7 +586,7 @@ export class Brain {
         goal = [pos[0] + Math.cos(away) * 50, pos[1] + Math.sin(away) * 50]
       }
       boost = me.energy > 40 && losFoes.length > 0
-    } else if (losTarget && losTarget.kind === "mech" && dist(losTarget.pos, me.pos) < 240) {
+    } else if (losTarget && losTarget.kind === "mech" && dist(losTarget.pos, me.pos) < P.fightMax) {
       this.mode = "fight"
       move = this.fightHeading(o, losTarget)
     } else {
@@ -527,7 +599,7 @@ export class Brain {
       } else if (drop && hpFrac < 0.95) {
         goal = [drop.pos[0], drop.pos[1]]
         this.mode = "drop"
-      } else if (target && target.kind === "mech") {
+      } else if (P.hunt && target && target.kind === "mech") {
         this.mode = "hunt"
         goal = [target.pos[0], target.pos[1]]
       } else if (losTarget) {
@@ -545,6 +617,7 @@ export class Brain {
     }
     if (!move) move = this.nav.steerTo(pos, goal, o.t)
     if (this.mode === "hold" && dist(pos, safe) < 12) move = [0, 0]
+    if (P.avoid && !dodge && this.mode !== "zone") move = this.avoidSteer(o, move, target?.id ?? null)
 
     // stuck / off-grid escape
     const speed = Math.hypot(me.vel[0], me.vel[1])
