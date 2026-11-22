@@ -28,7 +28,8 @@ export type DecisionInfo = {
 export const P = {
   provoke: 1, // 1: don't shoot mechs that are not engaging us (unless close or weak)
   provokeR: 50,
-  retreatHp: 0.33,
+  retreatHp: 0.2,
+  retreatFire: 1, // 1 = keep shooting while retreating
   returnHp: 0.75,
   gunLo: 40,
   gunHi: 70,
@@ -75,7 +76,7 @@ export const P = {
   drops: 0, // 1: capture supply drops
   avoidR: 70,
   avoidW: 3,
-  outHp: 0.5, // retreat with 2+ attackers in LOS below this hp fraction
+  outHp: 0.3, // retreat with 2+ attackers in LOS below this hp fraction
 }
 try {
   const env = (globalThis as any).process?.env?.BOT_PARAMS
@@ -947,7 +948,7 @@ export class Brain {
     const li = me.weapons.findIndex((w) => w?.kind === "laser")
     const laser = li >= 0 ? me.weapons[li] : null
     const charging = !!laser && (laser.charge ?? 0) > 0
-    const holdFire = retreat && !(o.t - this.lastHitAt < 1.2)
+    const holdFire = P.retreatFire ? false : retreat && !(o.t - this.lastHitAt < 1.2)
     const fireTarget = target && (losTarget === target || this.mode === "crate") ? target : null
     const aimTarget = fireTarget ?? (charging && target ? target : null)
 

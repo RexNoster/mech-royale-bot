@@ -118,4 +118,7 @@ The starter does none of these (no lead, no LOS check, fires at anything, walks 
 | 11-23 03:17 | 5201ce9 | v11 SUBMIT: v9 ranges + opening laser rush (sim +0.02±0.04) ≈ v9 re-measure | pending |
 | 11-23 03:25 | 5201ce9 | v11 official **5.10** → v9 level (5.09) confirmed real; new plateau ≈5.1 | best tier |
 | 11-23 03:33 | 7935327 | v12 SUBMIT: laser-cooldown punish + gun-only crate cracking (sim −0.06±0.08, neutral) | pending |
+| 11-23 03:45 | 7935327 | v12 official **5.10** (punish + gunCrate neutral) | |
+| 11-23 03:55 | — | noMortar sim −0.07±0.06 (default) / +0.00 (harsh aim) — not submitted. Harsh-aim sim (TIER_AIM .025/.018/.012/.006) also fails to reproduce weapon-run gain (+0.04) → sim abandoned as screen | |
+| 11-23 03:58 | 378b974 | v13 SUBMIT: v12 minus laserDuck/coverReload (coincided with v4→v6 −0.13) | pending |
 | 11-23 00:00 | — | Codex v2: fire gate cd≤0.1, laser hold-on-LOS-loss + lethal release, weapon values/seek, cube scoop, unseen-attacker turn, anti-lightning, laser dodge, range bands, mortar solve | pending |
