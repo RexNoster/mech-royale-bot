@@ -36,15 +36,15 @@ export const P = {
   laserHi: 110,
   laserLoot: 180,
   lootEnemyR: 90,
-  flipMin: 0.12,
-  flipVar: 0.16,
+  flipMin: 0.25,
+  flipVar: 0.45,
   strafeW: 7,
   hunt: 1,
   fightMax: 240,
   rim: 0.6, // where in the next circle we wait (fraction of its radius, toward our side)
   rimLate: 0.45,
   lightV: 2.6,
-  upDef: 0,
+  upDef: 1,
   cubeR: 70,
   coverHold: 0, // 1: while idle, wait at the least-exposed spot near the rim goal
   holdR: 28,
