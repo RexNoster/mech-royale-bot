@@ -36,8 +36,8 @@ export const P = {
   laserHi: 110,
   laserLoot: 180,
   lootEnemyR: 90,
-  flipMin: 0.25,
-  flipVar: 0.45,
+  flipMin: 0.12,
+  flipVar: 0.16,
   strafeW: 7,
   hunt: 1,
   fightMax: 240,
@@ -55,8 +55,8 @@ export const P = {
   adaptLead: 1, // 1: per-opponent lead factor learned from virtual shots
   leadMin: 6,
   wrun: 1, // 1: fetch a laser (or any weapon when gun-only) even mid-fight
-  wrunLaser: 160,
-  wrunAny: 85,
+  wrunLaser: 130,
+  wrunAny: 70,
   earlyT: 40, // opening laser rush: until this time, go further for a laser while nothing engages us nearby
   earlyLaser: 220,
   punish: 1, // 1: track enemy laser shots; no ducking + target priority while their laser recharges

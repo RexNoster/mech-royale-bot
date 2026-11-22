@@ -134,4 +134,6 @@ The starter does none of these (no lead, no LOS check, fires at anything, walks 
 | 11-23 04:44 | 0edaca8 | v18 SUBMIT: v13 + closer bands (gun 28–55, laser 40–85) | pending |
 | 11-23 04:50 | 0edaca8 | v18 official **5.06** (−0.39): closer bands hurt → v13 bands bracketed (v17 5.22 / v18 5.06) | keep v13 |
 | 11-23 04:51 | 36bcd2e | v19 SUBMIT: v13 + laser dodge off | pending |
+| 11-23 05:00 | 36bcd2e | v19 official **5.17** (−0.28): dodge helps, kept | v13 local optimum |
+| 11-23 05:06 | d806391 | v20 SUBMIT: v13 + weapon run 160/85 m | pending |
 | 11-23 00:00 | — | Codex v2: fire gate cd≤0.1, laser hold-on-LOS-loss + lethal release, weapon values/seek, cube scoop, unseen-attacker turn, anti-lightning, laser dodge, range bands, mortar solve | pending |
