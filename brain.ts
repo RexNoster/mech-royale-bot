@@ -54,6 +54,9 @@ export const P = {
   seekHp: 0.65,
   adaptLead: 1, // 1: per-opponent lead factor learned from virtual shots
   leadMin: 6,
+  wrun: 1, // 1: fetch a laser (or any weapon when gun-only) even mid-fight
+  wrunLaser: 130,
+  wrunAny: 70,
   open: 0, // seconds of cautious opening (near loot only, quiet walk, avoid idle mechs, no hunt/farm)
   openLoot: 80,
   openFight: 120,
@@ -662,6 +665,26 @@ export class Brain {
     return best
   }
 
+  /** a weapon worth fetching even mid-fight: a laser when we lack one, or anything when we hold only the gun */
+  weaponRun(o: Observation, losTarget: ActorObs | null, hpFrac: number): Mem | null {
+    if (hpFrac < 0.3) return null
+    if (losTarget && losTarget.kind === "mech" && dist(losTarget.pos, o.self.pos) < 40) return null
+    const sec = this.secondary(o)
+    let best: Mem | null = null
+    let bestD = Infinity
+    for (const p of this.pickups.values()) {
+      if (!this.wantPickup(o, p.kind) || !this.reachable(p.pos)) continue
+      const lim = p.kind === "laser" && sec.kind !== "laser" ? P.wrunLaser : sec.kind === null ? P.wrunAny : 0
+      const d = dist(p.pos, o.self.pos)
+      if (d > lim || this.enemyNear(o, p.pos, 25, false)) continue
+      if (d < bestD) {
+        bestD = d
+        best = p
+      }
+    }
+    return best
+  }
+
   /** reload behind cover / duck a laser carrier that is lining us up */
   wantCover(o: Observation, losTarget: ActorObs | null): boolean {
     const me = o.self
@@ -790,6 +813,11 @@ export class Brain {
         goal = [pos[0] + Math.cos(away) * 50, pos[1] + Math.sin(away) * 50]
       }
       boost = me.energy > 40 && losFoes.length > 0
+    } else if (P.wrun && this.weaponRun(o, losTarget, hpFrac)) {
+      const wr = this.weaponRun(o, losTarget, hpFrac)!
+      this.mode = "wrun"
+      goal = [wr.pos[0], wr.pos[1]]
+      boost = me.energy > 30
     } else if (this.wantCover(o, losTarget)) {
       this.mode = "cover"
       if (!this.coverCache || o.t - this.coverCache.t > 1) this.coverCache = { t: o.t, goal: this.coverGoal(o) }
