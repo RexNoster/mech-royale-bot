@@ -28,12 +28,12 @@ export type DecisionInfo = {
 export const P = {
   provoke: 1, // 1: don't shoot mechs that are not engaging us (unless close or weak)
   provokeR: 50,
-  retreatHp: 0.4,
-  returnHp: 0.85,
+  retreatHp: 0.33,
+  returnHp: 0.75,
   gunLo: 40,
   gunHi: 70,
-  laserLo: 55,
-  laserHi: 110,
+  laserLo: 90,
+  laserHi: 150,
   laserLoot: 180,
   lootEnemyR: 90,
   flipMin: 0.25,
@@ -75,7 +75,7 @@ export const P = {
   drops: 0, // 1: capture supply drops
   avoidR: 70,
   avoidW: 3,
-  outHp: 0.6, // retreat with 2+ attackers in LOS below this hp fraction
+  outHp: 0.5, // retreat with 2+ attackers in LOS below this hp fraction
 }
 try {
   const env = (globalThis as any).process?.env?.BOT_PARAMS

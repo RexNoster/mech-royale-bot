@@ -126,4 +126,6 @@ The starter does none of these (no lead, no LOS check, fires at anything, walks 
 | 11-23 04:10 | 8808f5b | v14 official **5.03** (−0.42): retreat-to-regen matters; reverted. Lesson: ducking mid-fight hurts, retreating at low hp helps | |
 | 11-23 04:12 | — | Ahmad repo re-checked: no commits after f29e4d3 → f29e4d3 is the 6.74 build. Practice "squad" stance: hunt, engage ratio ≥0.7 / disengage <0.3, LootRadius 250, WantCubes 26, mid-fight cube runs | |
 | 11-23 04:14 | 396579b | v15 SUBMIT (Codex): v13 + cube greed (cubeR 150, enemy-near 35 m, mid-fight cube run 25 m) | pending |
+| 11-23 04:20 | 396579b | v15 official **5.42** (cube greed neutral vs v13 5.45) | |
+| 11-23 04:20 | a0d1b61 | v16 SUBMIT: v13 + retreat earlier (<40%, outnumbered <60%, return >85%) — opposite of v14 | pending |
 | 11-23 00:00 | — | Codex v2: fire gate cd≤0.1, laser hold-on-LOS-loss + lethal release, weapon values/seek, cube scoop, unseen-attacker turn, anti-lightning, laser dodge, range bands, mortar solve | pending |
