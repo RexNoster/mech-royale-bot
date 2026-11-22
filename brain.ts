@@ -55,14 +55,13 @@ export const P = {
   adaptLead: 1, // 1: per-opponent lead factor learned from virtual shots
   leadMin: 6,
   wrun: 1, // 1: fetch a laser (or any weapon when gun-only) even mid-fight
-  wrunLaser: 130,
-  wrunAny: 70,
+  wrunLaser: 160,
+  wrunAny: 85,
   earlyT: 40, // opening laser rush: until this time, go further for a laser while nothing engages us nearby
   earlyLaser: 220,
   punish: 1, // 1: track enemy laser shots; no ducking + target priority while their laser recharges
   punishW: 25,
   gunCrate: 1, // 1: while gun-only, crack crates within 70 m for their 50% weapon drop (unless an engaging mech is in LOS)
-  dodge: 0, // 1: sidestep+boost when a visible laser charge is aimed at us
   open: 0, // seconds of cautious opening (near loot only, quiet walk, avoid idle mechs, no hunt/farm)
   openLoot: 80,
   openFight: 120,
@@ -819,7 +818,7 @@ export class Brain {
     let move: Vec2 | null = null
     let boost = false
     this.mode = "hold"
-    const dh = P.dodge ? this.dodgeHeading(o) : null
+    const dh = this.dodgeHeading(o)
     if (zoneUrgent) {
       this.mode = "zone"
       boost = outside && me.energy > 20

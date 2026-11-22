@@ -132,4 +132,6 @@ The starter does none of these (no lead, no LOS check, fires at anything, walks 
 | 11-23 04:32 | 555ca6c | v17 SUBMIT: v13 + laser band 90–150 m | pending |
 | 11-23 04:42 | 555ca6c | v17 official **5.22** (−0.23): farther laser band hurts | revert |
 | 11-23 04:44 | 0edaca8 | v18 SUBMIT: v13 + closer bands (gun 28–55, laser 40–85) | pending |
+| 11-23 04:50 | 0edaca8 | v18 official **5.06** (−0.39): closer bands hurt → v13 bands bracketed (v17 5.22 / v18 5.06) | keep v13 |
+| 11-23 04:51 | 36bcd2e | v19 SUBMIT: v13 + laser dodge off | pending |
 | 11-23 00:00 | — | Codex v2: fire gate cd≤0.1, laser hold-on-LOS-loss + lethal release, weapon values/seek, cube scoop, unseen-attacker turn, anti-lightning, laser dodge, range bands, mortar solve | pending |
