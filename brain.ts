@@ -41,8 +41,15 @@ export const P = {
   strafeW: 7,
   hunt: 1,
   fightMax: 240,
-  rim: 0.95, // where in the next circle we wait (fraction of its radius, toward our side)
+  rim: 0.6, // where in the next circle we wait (fraction of its radius, toward our side)
   rimLate: 0.45,
+  lightV: 2.6,
+  upDef: 0,
+  cubeR: 70,
+  coverHold: 0, // 1: while idle, wait at the least-exposed spot near the rim goal
+  holdR: 28,
+  coverReload: 1,
+  laserDuck: 1,
   open: 0, // seconds of cautious opening (near loot only, quiet walk, avoid idle mechs, no hunt/farm)
   openLoot: 80,
   openFight: 120,
@@ -93,6 +100,8 @@ export class Brain {
   escapeDir: Vec2 = [1, 0]
   lastSound: { bearing: number; t: number } | null = null
   scanPhase = 0
+  coverCache: { t: number; goal: Vec2 | null } | null = null
+  hold: { t: number; base: Vec2; spot: Vec2 } | null = null
   hurtBy = new Map<number, number>()
   hitOn = new Map<number, number>()
 
@@ -356,6 +365,7 @@ export class Brain {
     const held = new Set(o.self.weapons.filter(Boolean).map((w) => w!.kind))
     const rank = (id: string) => {
       let n = UPGRADE_ORDER.findIndex((x) => id === x || id.startsWith(x))
+      if (P.upDef && (id === "plating" || id === "armor")) n = -1 + (id === "armor" ? 0.5 : 0)
       for (const k of ["laser", "lightning", "mortar", "gun"]) if (id.startsWith(k) && !held.has(k as any)) n = 99
       return n < 0 ? 98 : n
     }
@@ -381,7 +391,11 @@ export class Brain {
     if (kind === "gun") return o.self.weapons.some((w) => !w)
     if (o.self.weapons.some((w) => !w)) return true
     const sec = this.secondary(o)
-    return sec.kind !== null && (WEAPON_VALUE[kind] ?? 0) > (WEAPON_VALUE[sec.kind] ?? 0)
+    return sec.kind !== null && this.wval(kind) > this.wval(sec.kind)
+  }
+
+  wval(kind: string) {
+    return kind === "lightning" ? P.lightV : (WEAPON_VALUE[kind] ?? 0)
   }
 
   enemyNear(o: Observation, p: number[], r: number, needLos = true) {
@@ -401,7 +415,7 @@ export class Brain {
         let lim = p.kind === "laser" && sec.kind !== "laser" ? P.laserLoot : hasEmpty ? 120 : 70
         if (o.t < P.open) lim = Math.min(lim, p.kind === "laser" ? P.openLoot : P.openLoot * 0.75)
         if (d > lim) continue
-        const s = (WEAPON_VALUE[p.kind] ?? 0) * 30 - d
+        const s = this.wval(p.kind) * 30 - d
         if (s > bestScore) {
           bestScore = s
           best = { goal: [p.pos[0], p.pos[1]], mode: "loot", boost: p.kind === "laser" && me.energy > 30 }
@@ -411,7 +425,7 @@ export class Brain {
     for (const c of this.cubes.values()) {
       if (!this.reachable(c.pos)) continue
       const d = dist(c.pos, me.pos)
-      if (d > 70 || this.enemyNear(o, c.pos, 70)) continue
+      if (d > P.cubeR || this.enemyNear(o, c.pos, 70)) continue
       const s = 120 - d
       if (s > bestScore) {
         bestScore = s
@@ -531,6 +545,62 @@ export class Brain {
     return null
   }
 
+  /** least-exposed walkable spot near `base` (cached ~3 s) */
+  holdSpot(o: Observation, base: Vec2): Vec2 {
+    if (this.hold && o.t - this.hold.t < 3 && dist(this.hold.base, base) < 15) return this.hold.spot
+    let best = base
+    let bestS = Infinity
+    const eyeH = this.cfg.mech.eye_height ?? 8
+    for (let r = 0; r <= P.holdR; r += 7) {
+      const n = r === 0 ? 1 : 10
+      for (let i = 0; i < n; i++) {
+        const h = (i * TAU) / n
+        const q: Vec2 = [base[0] + Math.cos(h) * r, base[1] + Math.sin(h) * r]
+        if (!this.nav.walkable(q) || !this.inZoneSoon(o, q)) continue
+        const z = this.world.standZ(q[0], q[1])
+        let exp = 0
+        for (let k = 0; k < 12; k++) {
+          const b = (k * TAU) / 12
+          const fx = q[0] + Math.cos(b) * 70
+          const fy = q[1] + Math.sin(b) * 70
+          if (this.world.los([q[0], q[1], z + eyeH], [fx, fy, this.world.groundZ(fx, fy) + 6])) exp++
+        }
+        const sc = exp + r * 0.04
+        if (sc < bestS) {
+          bestS = sc
+          best = q
+        }
+      }
+    }
+    this.hold = { t: o.t, base, spot: best }
+    return best
+  }
+
+  /** reload behind cover / duck a laser carrier that is lining us up */
+  wantCover(o: Observation, losTarget: ActorObs | null): boolean {
+    const me = o.self
+    const sec = this.secondary(o)
+    if (P.coverReload && losTarget && losTarget.kind === "mech") {
+      const gun = me.weapons.find((w) => w?.kind === "gun")
+      const sw = sec.idx >= 0 ? me.weapons[sec.idx] : null
+      const secReady = !!sw && ((sw.kind === "laser" && sw.cooldown <= 0.3) || (sw.kind === "lightning" && dist(losTarget.pos, me.pos) < 43))
+      const dry = !!gun && ((gun.reload ?? 0) > 0.4 || (gun.ammo ?? 12) <= 1)
+      const weak = losTarget.hp !== undefined && losTarget.hp < 0.25 * (losTarget.max_hp ?? 1400)
+      if (dry && !secReady && !weak && dist(losTarget.pos, me.pos) > 30) return true
+    }
+    if (P.laserDuck && sec.kind !== "laser") {
+      for (const v of this.enemies()) {
+        const a = v.actor
+        if (!v.los || !(a.weapons ?? []).includes("laser")) continue
+        const d = dist(a.pos, me.pos)
+        if (d < 60 || d > 285) continue
+        const toUs = Math.atan2(me.pos[1] - a.pos[1], me.pos[0] - a.pos[0])
+        if (Math.abs(wrap(a.aim[0] - toUs)) < 0.2) return true
+      }
+    }
+    return false
+  }
+
   dodgeHeading(o: Observation): Vec2 | null {
     const me = o.self
     const pos: Vec2 = [me.pos[0], me.pos[1]]
@@ -634,6 +704,11 @@ export class Brain {
         goal = [pos[0] + Math.cos(away) * 50, pos[1] + Math.sin(away) * 50]
       }
       boost = me.energy > 40 && losFoes.length > 0
+    } else if (this.wantCover(o, losTarget)) {
+      this.mode = "cover"
+      if (!this.coverCache || o.t - this.coverCache.t > 1) this.coverCache = { t: o.t, goal: this.coverGoal(o) }
+      if (this.coverCache.goal) goal = this.coverCache.goal
+      else if (losTarget) move = this.fightHeading(o, losTarget)
     } else if (P.drops && this.capturing(o)) {
       this.mode = "capture"
       const d = this.capturing(o)!
@@ -680,8 +755,9 @@ export class Brain {
         }
       }
     }
+    if (P.coverHold && this.mode === "hold" && !move) goal = this.holdSpot(o, safe)
     if (!move) move = this.nav.steerTo(pos, goal, o.t)
-    if (this.mode === "hold" && dist(pos, safe) < 12) move = [0, 0]
+    if (this.mode === "hold" && dist(pos, goal) < (P.coverHold ? 3 : 12)) move = [0, 0]
     const opening = o.t < P.open
     if ((P.avoid || opening) && !dodge && this.mode !== "zone") move = this.avoidSteer(o, move, target?.id ?? null)
     if (opening && P.quiet && !dodge && !boost && ["hold", "loot", "cubes", "hunt"].includes(this.mode)) {

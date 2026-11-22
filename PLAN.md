@@ -98,4 +98,7 @@ The starter does none of these (no lead, no LOS check, fires at anything, walks 
 | 11-23 01:05 | ba94601 | v3 official **4.90** (predicted 4.9) → sim tracks our bot at ~2.5 official/sim pt; need +0.4 sim | |
 | 11-23 01:20 | 6919b73 | v4 SUBMIT: + farm drones + crates ≤80 m until 150 s (combo +0.14±0.09 / 288; singles flat). Opening 15/25 s −0.12/−0.01 in HK1 sim (off). | pending |
 | 11-23 01:25 | — | Testing stealth features under HUNT_KNOW=0 (squad unaware) — Ahmad's top features only make sense there | running |
+| 11-23 01:35 | — | HK0 sweep: opening25 −0.39±0.15 (reject), avoid +0.04, rim .85 +0.23±0.12; HK1 rim .85 +0.14 | |
+| 11-23 01:40 | 748c623 | v5 SUBMIT: rim 0.95 — paired +0.25±0.10 / +0.20±0.11 (HK1, 288 each) / +0.26±0.10 (HK0, 192); rim 1.0 +0.11; rimLate no effect. Predicted ~5.6–5.8 official | pending |
+| 11-23 01:45 | — | no-hunt on v5: +0.26 / +0.08 / −0.03 → pooled +0.11±0.06; KEEP hunt (Ahmad: hunt +0.61 official while sim-neutral) | |
 | 11-23 00:00 | — | Codex v2: fire gate cd≤0.1, laser hold-on-LOS-loss + lethal release, weapon values/seek, cube scoop, unseen-attacker turn, anti-lightning, laser dodge, range bands, mortar solve | pending |
