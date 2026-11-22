@@ -36,8 +36,8 @@ export const P = {
   laserHi: 110,
   laserLoot: 180,
   lootEnemyR: 90,
-  flipMin: 0.25,
-  flipVar: 0.45,
+  flipMin: 0.35,
+  flipVar: 0.75,
   strafeW: 7,
   hunt: 1,
   fightMax: 240,
@@ -71,7 +71,7 @@ export const P = {
   farmR: 120,
   crateR: 80, // shoot/walk to crates within this range
   crateUntil: 150,
-  noMortar: 0, // 1: never take mortars
+  noMortar: 1, // 1: never take mortars
   drops: 0, // 1: capture supply drops
   avoidR: 70,
   avoidW: 3,
@@ -808,7 +808,7 @@ export class Brain {
     const losTarget = tTrack && tTrack.los ? target : null
     const hpFrac = me.hp / me.max_hp
     const losFoes = this.enemies().filter((v) => v.los && dist(v.actor.pos, me.pos) < 230)
-    const weakTarget = !!losTarget && losTarget.kind === "mech" && losTarget.hp !== undefined && losTarget.hp < 0.4 * (losTarget.max_hp ?? 1400) && dist(losTarget.pos, me.pos) < 160
+    const weakTarget = !!losTarget && losTarget.kind === "mech" && losTarget.hp !== undefined && losTarget.hp < 0.3 * (losTarget.max_hp ?? 1400) && dist(losTarget.pos, me.pos) < 90
     if (this.retreating && hpFrac > P.returnHp) this.retreating = false
     if (!this.retreating && (hpFrac < P.retreatHp || (losFoes.length >= 2 && hpFrac < P.outHp)) && !weakTarget) this.retreating = true
     const retreat = this.retreating && !weakTarget
