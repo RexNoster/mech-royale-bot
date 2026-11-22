@@ -101,4 +101,8 @@ The starter does none of these (no lead, no LOS check, fires at anything, walks 
 | 11-23 01:35 | — | HK0 sweep: opening25 −0.39±0.15 (reject), avoid +0.04, rim .85 +0.23±0.12; HK1 rim .85 +0.14 | |
 | 11-23 01:40 | 748c623 | v5 SUBMIT: rim 0.95 — paired +0.25±0.10 / +0.20±0.11 (HK1, 288 each) / +0.26±0.10 (HK0, 192); rim 1.0 +0.11; rimLate no effect. Predicted ~5.6–5.8 official | pending |
 | 11-23 01:45 | — | no-hunt on v5: +0.26 / +0.08 / −0.03 → pooled +0.11±0.06; KEEP hunt (Ahmad: hunt +0.61 official while sim-neutral) | |
+| 11-23 01:50 | 6919b73 | v4 official **4.95** (pred 4.9–5.2) | best so far |
+| 11-23 01:55 | 748c623 | v5 official **4.76** (pred ~5.6) → rim/positioning gains in sim do NOT transfer (sim squad parks at 0.6 r of next circle); treat sim positioning results as untrusted; combat changes have transferred | revert rim |
+| 11-23 02:10 | — | lightV 7 −0.22±0.08, upDef −0.07, cubeR110 +0.12/−0.00, coverHold too slow (drop) | |
+| 11-23 02:15 | 480c81a | v6 SUBMIT: rim 0.6 + laserDuck (+0.13±0.06) + coverReload (+0.07±0.09) | pending |
 | 11-23 00:00 | — | Codex v2: fire gate cd≤0.1, laser hold-on-LOS-loss + lethal release, weapon values/seek, cube scoop, unseen-attacker turn, anti-lightning, laser dodge, range bands, mortar solve | pending |

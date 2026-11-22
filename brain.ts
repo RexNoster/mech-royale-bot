@@ -41,7 +41,7 @@ export const P = {
   strafeW: 7,
   hunt: 1,
   fightMax: 240,
-  rim: 0.6, // where in the next circle we wait (fraction of its radius, toward our side)
+  rim: 0.4, // where in the next circle we wait (fraction of its radius, toward our side)
   rimLate: 0.45,
   lightV: 2.6,
   upDef: 0,
@@ -50,6 +50,8 @@ export const P = {
   holdR: 28,
   coverReload: 1,
   laserDuck: 1,
+  seek: 25, // 1+: seconds of enemy memory to go looking for fights (0 = off)
+  seekHp: 0.65,
   open: 0, // seconds of cautious opening (near loot only, quiet walk, avoid idle mechs, no hunt/farm)
   openLoot: 80,
   openFight: 120,
@@ -100,6 +102,8 @@ export class Brain {
   escapeDir: Vec2 = [1, 0]
   lastSound: { bearing: number; t: number } | null = null
   scanPhase = 0
+  seen = new Map<number, { pos: Vec3; t: number }>()
+  loud: { pos: Vec2; t: number } | null = null
   coverCache: { t: number; goal: Vec2 | null } | null = null
   hold: { t: number; base: Vec2; spot: Vec2 } | null = null
   hurtBy = new Map<number, number>()
@@ -236,6 +240,14 @@ export class Brain {
       }
     }
     if ([...this.tracks.values()].some((v) => v.los && v.actor.kind === "mech")) this.lastLosAt = o.t
+    for (const a of o.mechs) if (a.kind === "mech") this.seen.set(a.id, { pos: a.pos, t: o.t })
+    for (const e of o.events) if (e.type === "kill") this.seen.delete(e.target)
+    for (const s of o.sounds) {
+      if (s.kind === "gun" || s.kind === "laser" || s.kind === "lightning" || s.kind === "mortar") {
+        const d = s.dist === "near" ? 45 : s.dist === "mid" ? 110 : 200
+        this.loud = { pos: [o.self.pos[0] + Math.cos(s.bearing) * d, o.self.pos[1] + Math.sin(s.bearing) * d], t: o.t - (s.age ?? 0) }
+      }
+    }
   }
 
   enemies(): Track[] {
@@ -576,6 +588,25 @@ export class Brain {
     return best
   }
 
+  /** where to go looking for a fight: last known enemy (<= P.seek s old) or recent gunfire, inside the zone */
+  seekGoal(o: Observation, hpFrac: number): Vec2 | null {
+    if (hpFrac < P.seekHp) return null
+    const armed = o.self.weapons.some((w) => w && w.kind !== "gun")
+    if (!armed && o.t < 60) return null
+    let best: Vec2 | null = null
+    let bestT = -Infinity
+    for (const [, v] of this.seen) {
+      if (o.t - v.t > P.seek || v.t <= bestT) continue
+      const q: Vec2 = [v.pos[0], v.pos[1]]
+      if (dist(q, o.self.pos) > 260 || !this.inZoneSoon(o, q)) continue
+      best = q
+      bestT = v.t
+    }
+    if (!best && this.loud && o.t - this.loud.t < 6 && this.inZoneSoon(o, this.loud.pos)) best = this.loud.pos
+    if (best && dist(best, o.self.pos) < 15) return null
+    return best
+  }
+
   /** reload behind cover / duck a laser carrier that is lining us up */
   wantCover(o: Observation, losTarget: ActorObs | null): boolean {
     const me = o.self
@@ -739,6 +770,9 @@ export class Brain {
       } else if (losTarget) {
         this.mode = "npc"
         move = this.fightHeading(o, losTarget)
+      } else if (P.seek && this.seekGoal(o, hpFrac)) {
+        this.mode = "seek"
+        goal = this.seekGoal(o, hpFrac)!
       } else if (target && target.kind === "npc" && P.farm) {
         this.mode = "farm"
         goal = [target.pos[0], target.pos[1]]
