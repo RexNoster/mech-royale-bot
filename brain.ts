@@ -48,8 +48,8 @@ export const P = {
   cubeR: 70,
   coverHold: 0, // 1: while idle, wait at the least-exposed spot near the rim goal
   holdR: 28,
-  coverReload: 1,
-  laserDuck: 1,
+  coverReload: 0,
+  laserDuck: 0,
   seek: 0, // 1+: seconds of enemy memory to go looking for fights (0 = off)
   seekHp: 0.65,
   adaptLead: 1, // 1: per-opponent lead factor learned from virtual shots

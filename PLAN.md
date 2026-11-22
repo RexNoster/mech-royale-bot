@@ -116,4 +116,6 @@ The starter does none of these (no lead, no LOS check, fires at anything, walks 
 | 11-23 02:56 | 1ffc376 | v10 SUBMIT: weapon run 200/100 m, laserLoot 250, lootEnemyR 50 | pending |
 | 11-23 03:10 | 1ffc376 | v10 official **4.88** → over-greedy ranges hurt (or v9 partly lucky) | |
 | 11-23 03:17 | 5201ce9 | v11 SUBMIT: v9 ranges + opening laser rush (sim +0.02±0.04) ≈ v9 re-measure | pending |
+| 11-23 03:25 | 5201ce9 | v11 official **5.10** → v9 level (5.09) confirmed real; new plateau ≈5.1 | best tier |
+| 11-23 03:33 | 7935327 | v12 SUBMIT: laser-cooldown punish + gun-only crate cracking (sim −0.06±0.08, neutral) | pending |
 | 11-23 00:00 | — | Codex v2: fire gate cd≤0.1, laser hold-on-LOS-loss + lethal release, weapon values/seek, cube scoop, unseen-attacker turn, anti-lightning, laser dodge, range bands, mortar solve | pending |
