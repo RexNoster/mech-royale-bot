@@ -95,4 +95,7 @@ The starter does none of these (no lead, no LOS check, fires at anything, walks 
 | 11-23 00:40 | — | Sweeps (paired, fresh ranges): provoke +0.42/−0.11/+0.21 (96/96/288) → pooled +0.19±0.09, adopt. far bands +0.07, retreat .25/.45 ≈0, flip faster −0.05, avoid −0.01, outnumbered-retreat .8 0.00, no-hunt +0.05 | sim saturating on knobs |
 | 11-23 00:45 | — | Caveat: per Ahmad notes giddy (6.19 official) ≈ his 2.52 bot in sim → sim misranks top bots; official board is the real instrument | |
 | 11-23 00:50 | ba94601 | v3 SUBMIT: v2 + provoke. sim ~2.2–2.3 | pending |
+| 11-23 01:05 | ba94601 | v3 official **4.90** (predicted 4.9) → sim tracks our bot at ~2.5 official/sim pt; need +0.4 sim | |
+| 11-23 01:20 | 6919b73 | v4 SUBMIT: + farm drones + crates ≤80 m until 150 s (combo +0.14±0.09 / 288; singles flat). Opening 15/25 s −0.12/−0.01 in HK1 sim (off). | pending |
+| 11-23 01:25 | — | Testing stealth features under HUNT_KNOW=0 (squad unaware) — Ahmad's top features only make sense there | running |
 | 11-23 00:00 | — | Codex v2: fire gate cd≤0.1, laser hold-on-LOS-loss + lethal release, weapon values/seek, cube scoop, unseen-attacker turn, anti-lightning, laser dodge, range bands, mortar solve | pending |

@@ -41,6 +41,8 @@ export const P = {
   strafeW: 7,
   hunt: 1,
   fightMax: 240,
+  rim: 0.95, // where in the next circle we wait (fraction of its radius, toward our side)
+  rimLate: 0.45,
   open: 0, // seconds of cautious opening (near loot only, quiet walk, avoid idle mechs, no hunt/farm)
   openLoot: 80,
   openFight: 120,
@@ -146,7 +148,7 @@ export class Brain {
     const dx = p[0] - z.next_center[0]
     const dy = p[1] - z.next_center[1]
     const d = Math.hypot(dx, dy) || 1
-    const f = z.next_radius > 150 ? 0.6 : 0.45
+    const f = z.next_radius > 150 ? P.rim : P.rimLate
     const reach = Math.min(d, z.next_radius * f)
     let q: Vec2 = [z.next_center[0] + (dx / d) * reach, z.next_center[1] + (dy / d) * reach]
     const now = this.zoneAt(o, o.t)
