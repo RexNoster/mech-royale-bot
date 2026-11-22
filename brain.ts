@@ -67,9 +67,9 @@ export const P = {
   openFight: 120,
   quiet: 1,
   avoid: 0, // 1: steer away from mechs that are not engaging us
-  farm: 0, // 1: farm NPC drones (2 cubes) when no mech engages us
+  farm: 1, // 1: farm NPC drones (2 cubes) when no mech engages us
   farmR: 120,
-  crateR: 0, // shoot/walk to crates within this range
+  crateR: 80, // shoot/walk to crates within this range
   crateUntil: 150,
   noMortar: 0, // 1: never take mortars
   drops: 0, // 1: capture supply drops
@@ -808,7 +808,7 @@ export class Brain {
     const losTarget = tTrack && tTrack.los ? target : null
     const hpFrac = me.hp / me.max_hp
     const losFoes = this.enemies().filter((v) => v.los && dist(v.actor.pos, me.pos) < 230)
-    const weakTarget = !!losTarget && losTarget.kind === "mech" && losTarget.hp !== undefined && losTarget.hp < 0.3 * (losTarget.max_hp ?? 1400) && dist(losTarget.pos, me.pos) < 90
+    const weakTarget = !!losTarget && losTarget.kind === "mech" && losTarget.hp !== undefined && losTarget.hp < 0.4 * (losTarget.max_hp ?? 1400) && dist(losTarget.pos, me.pos) < 160
     if (this.retreating && hpFrac > P.returnHp) this.retreating = false
     if (!this.retreating && (hpFrac < P.retreatHp || (losFoes.length >= 2 && hpFrac < P.outHp)) && !weakTarget) this.retreating = true
     const retreat = this.retreating && !weakTarget
