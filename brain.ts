@@ -59,6 +59,9 @@ export const P = {
   wrunAny: 70,
   earlyT: 40, // opening laser rush: until this time, go further for a laser while nothing engages us nearby
   earlyLaser: 220,
+  punish: 1, // 1: track enemy laser shots; no ducking + target priority while their laser recharges
+  punishW: 25,
+  gunCrate: 1, // 1: while gun-only, crack crates within 70 m for their 50% weapon drop (unless an engaging mech is in LOS)
   open: 0, // seconds of cautious opening (near loot only, quiet walk, avoid idle mechs, no hunt/farm)
   openLoot: 80,
   openFight: 120,
@@ -109,6 +112,7 @@ export class Brain {
   escapeDir: Vec2 = [1, 0]
   lastSound: { bearing: number; t: number } | null = null
   scanPhase = 0
+  laserShot = new Map<number, number>()
   vshots: { id: number; due: number; preds: [number, number][] }[] = []
   leadErr = new Map<number, { e: number[]; n: number; lastShot: number }>()
   seen = new Map<number, { pos: Vec3; t: number }>()
@@ -251,6 +255,7 @@ export class Brain {
     if ([...this.tracks.values()].some((v) => v.los && v.actor.kind === "mech")) this.lastLosAt = o.t
     for (const a of o.mechs) if (a.kind === "mech") this.seen.set(a.id, { pos: a.pos, t: o.t })
     if (P.adaptLead) this.learnLead(o)
+    for (const b of o.beams ?? []) if (b.kind === "laser" && b.by !== null && b.by !== undefined) this.laserShot.set(b.by, o.t - (b.age ?? 0))
     for (const e of o.events) if (e.type === "kill") this.seen.delete(e.target)
     for (const s of o.sounds) {
       if (s.kind === "gun" || s.kind === "laser" || s.kind === "lightning" || s.kind === "mortar") {
@@ -286,6 +291,7 @@ export class Brain {
       if (k === this.lastHitBy && o.t - this.lastHitAt < 3) s += 30
       if (k === this.target) s += 25
       if (a.kind === "mech" && this.isRear(o, a)) s += 10
+      if (a.kind === "mech" && this.laserCooling(o, a.id)) s += P.punishW
       if (s > best) {
         best = s
         id = k
@@ -311,6 +317,13 @@ export class Brain {
     if (d < 170 && Math.abs(wrap(a.aim[0] - toUs)) < 0.25) return true
     const closing = a.vel[0] * Math.cos(toUs) + a.vel[1] * Math.sin(toUs)
     return d < 130 && closing > 3
+  }
+
+  /** true while this enemy's laser is recharging after a shot we saw */
+  laserCooling(o: Observation, id: number) {
+    if (!P.punish) return false
+    const t = this.laserShot.get(id)
+    return t !== undefined && o.t - t < (this.cfg.weapons?.laser?.cooldown ?? 1.65) - 0.25
   }
 
   isRear(o: Observation, a: ActorObs) {
@@ -688,6 +701,13 @@ export class Brain {
     return best
   }
 
+  gunCrateTarget(o: Observation) {
+    if (this.enemies().some((v) => o.t - v.last < 4 && dist(v.actor.pos, o.self.pos) < 60 && this.engaging(o, v.actor))) return null
+    return o.crates
+      .filter((c) => dist(c.pos, o.self.pos) < 70 && this.world.los(this.muzzle(o), [c.pos[0], c.pos[1], c.pos[2] + 1]))
+      .sort((x, y) => dist(x.pos, o.self.pos) - dist(y.pos, o.self.pos))[0] ?? null
+  }
+
   /** reload behind cover / duck a laser carrier that is lining us up */
   wantCover(o: Observation, losTarget: ActorObs | null): boolean {
     const me = o.self
@@ -703,7 +723,7 @@ export class Brain {
     if (P.laserDuck && sec.kind !== "laser") {
       for (const v of this.enemies()) {
         const a = v.actor
-        if (!v.los || !(a.weapons ?? []).includes("laser")) continue
+        if (!v.los || !(a.weapons ?? []).includes("laser") || this.laserCooling(o, a.id)) continue
         const d = dist(a.pos, me.pos)
         if (d < 60 || d > 285) continue
         const toUs = Math.atan2(me.pos[1] - a.pos[1], me.pos[0] - a.pos[0])
@@ -821,6 +841,12 @@ export class Brain {
       this.mode = "wrun"
       goal = [wr.pos[0], wr.pos[1]]
       boost = me.energy > 30
+    } else if (P.gunCrate && !losTarget && this.secondary(o).kind === null && hpFrac > 0.45 && this.gunCrateTarget(o)) {
+      const c = this.gunCrateTarget(o)!
+      this.mode = "crate"
+      target = { id: c.id, kind: "npc", pos: c.pos, vel: [0, 0, 0], aim: [0, 0], hp: c.hp } as ActorObs
+      if (dist(c.pos, me.pos) > 35) goal = [c.pos[0], c.pos[1]]
+      else move = [0, 0]
     } else if (this.wantCover(o, losTarget)) {
       this.mode = "cover"
       if (!this.coverCache || o.t - this.coverCache.t > 1) this.coverCache = { t: o.t, goal: this.coverGoal(o) }

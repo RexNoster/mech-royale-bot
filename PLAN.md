@@ -114,4 +114,6 @@ The starter does none of these (no lead, no LOS check, fires at anything, walks 
 | 11-23 02:52 | 65e2bb9 | v9 SUBMIT (real test): weapon run. Sim +0.19±0.11 / −0.12±0.12 | pending |
 | 11-23 02:55 | 65e2bb9 | v9 official **5.09** (best; +0.25 vs 4.83 plateau ≈2.5σ) → weapon acquisition is the real lever | BEST |
 | 11-23 02:56 | 1ffc376 | v10 SUBMIT: weapon run 200/100 m, laserLoot 250, lootEnemyR 50 | pending |
+| 11-23 03:10 | 1ffc376 | v10 official **4.88** → over-greedy ranges hurt (or v9 partly lucky) | |
+| 11-23 03:17 | 5201ce9 | v11 SUBMIT: v9 ranges + opening laser rush (sim +0.02±0.04) ≈ v9 re-measure | pending |
 | 11-23 00:00 | — | Codex v2: fire gate cd≤0.1, laser hold-on-LOS-loss + lethal release, weapon values/seek, cube scoop, unseen-attacker turn, anti-lightning, laser dodge, range bands, mortar solve | pending |
