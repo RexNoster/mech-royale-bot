@@ -41,7 +41,17 @@ export const P = {
   strafeW: 7,
   hunt: 1,
   fightMax: 240,
+  open: 0, // seconds of cautious opening (near loot only, quiet walk, avoid idle mechs, no hunt/farm)
+  openLoot: 80,
+  openFight: 120,
+  quiet: 1,
   avoid: 0, // 1: steer away from mechs that are not engaging us
+  farm: 1, // 1: farm NPC drones (2 cubes) when no mech engages us
+  farmR: 120,
+  crateR: 80, // shoot/walk to crates within this range
+  crateUntil: 150,
+  noMortar: 0, // 1: never take mortars
+  drops: 0, // 1: capture supply drops
   avoidR: 70,
   avoidW: 3,
   outHp: 0.5, // retreat with 2+ attackers in LOS below this hp fraction
@@ -62,6 +72,7 @@ export class Brain {
   tracks = new Map<number, Track>()
   pickups = new Map<number, Mem>()
   cubes = new Map<number, Mem>()
+  crates = new Map<number, Mem & { hp: number }>()
   target: number | null = null
   lastHitBy: number | null = null
   lastHitAt = -Infinity
@@ -191,6 +202,12 @@ export class Brain {
     // weapon pickups and cubes persist on the ground: remember them
     const pickupIds = new Set(o.pickups.map((p) => p.id))
     for (const p of o.pickups) this.pickups.set(p.id, { id: p.id, kind: p.kind, pos: p.pos, last: o.t })
+    const crateIds = new Set(o.crates.map((c) => c.id))
+    for (const c of o.crates) this.crates.set(c.id, { id: c.id, kind: "crate", pos: c.pos, last: o.t, hp: c.hp })
+    for (const [id, m] of this.crates) {
+      if (!crateIds.has(id) && dist(m.pos, o.self.pos) < (this.cfg.vision?.near_range ?? 45) - 8) this.crates.delete(id)
+      else if (o.t - m.last > 120) this.crates.delete(id)
+    }
     const cubeIds = new Set(o.cubes.map((c) => c.id))
     for (const c of o.cubes) this.cubes.set(c.id, { id: c.id, kind: "cube", pos: c.pos, last: o.t })
     const near = (this.cfg.vision?.near_range ?? 45) - 8
@@ -224,7 +241,8 @@ export class Brain {
       const d = dist(a.pos, o.self.pos)
       if (a.kind === "npc") {
         const shootingUs = k === this.lastHitBy && o.t - this.lastHitAt < 4
-        if (mechInLos || !shootingUs) continue
+        const farmable = P.farm && this.farmOk(o) && v.seen && d < P.farmR && this.reachable(a.pos)
+        if (mechInLos || !(shootingUs || farmable)) continue
       }
       if (!v.seen && o.t - v.last > 2) continue
       if (d > 300) continue
@@ -242,6 +260,13 @@ export class Brain {
     }
     this.target = id
     return id === null ? null : this.tracks.get(id)!.actor
+  }
+
+  /** safe to spend time on drones/crates: healthy, no mech engaging us or in LOS within 150 m */
+  farmOk(o: Observation) {
+    if (o.t < P.open) return false
+    if (o.self.hp < 0.6 * o.self.max_hp) return false
+    return !this.enemies().some((v) => o.t - v.last < 5 && ((v.los && dist(v.actor.pos, o.self.pos) < 150) || this.engaging(o, v.actor)))
   }
 
   engaging(o: Observation, a: ActorObs) {
@@ -350,6 +375,7 @@ export class Brain {
 
   wantPickup(o: Observation, kind: string) {
     if (o.self.weapons.some((w) => w?.kind === kind)) return false
+    if (P.noMortar && kind === "mortar") return false
     if (kind === "gun") return o.self.weapons.some((w) => !w)
     if (o.self.weapons.some((w) => !w)) return true
     const sec = this.secondary(o)
@@ -370,7 +396,8 @@ export class Brain {
       for (const p of this.pickups.values()) {
         if (!this.wantPickup(o, p.kind) || !this.reachable(p.pos)) continue
         const d = dist(p.pos, me.pos)
-        const lim = p.kind === "laser" && sec.kind !== "laser" ? P.laserLoot : hasEmpty ? 120 : 70
+        let lim = p.kind === "laser" && sec.kind !== "laser" ? P.laserLoot : hasEmpty ? 120 : 70
+        if (o.t < P.open) lim = Math.min(lim, p.kind === "laser" ? P.openLoot : P.openLoot * 0.75)
         if (d > lim) continue
         const s = (WEAPON_VALUE[p.kind] ?? 0) * 30 - d
         if (s > bestScore) {
@@ -483,6 +510,25 @@ export class Brain {
     return [Math.cos(bh), Math.sin(bh)]
   }
 
+  /** a landed drop whose ring we stand in and can capture */
+  capturing(o: Observation) {
+    return o.drops.find((d: any) => d.lands_in <= 0.3 && dist(d.pos, o.self.pos) < (d.radius ?? 8) - 1.5 && (d.holder == null || d.holder === o.self.id)) ?? null
+  }
+
+  dropGoal(o: Observation): Vec2 | null {
+    const me = o.self
+    const walk = me.stats.walk_speed ?? 11.7
+    for (const d of o.drops as any[]) {
+      const dd = dist(d.pos, me.pos)
+      if (dd > 200 || d.lands_in > dd / walk + 3) continue
+      if (d.holder != null && d.holder !== me.id) continue
+      if (!this.inZoneSoon(o, [d.pos[0], d.pos[1]]) || !this.reachable(d.pos)) continue
+      if (this.enemyNear(o, d.pos, 90)) continue
+      return [d.pos[0], d.pos[1]]
+    }
+    return null
+  }
+
   dodgeHeading(o: Observation): Vec2 | null {
     const me = o.self
     const pos: Vec2 = [me.pos[0], me.pos[1]]
@@ -586,38 +632,61 @@ export class Brain {
         goal = [pos[0] + Math.cos(away) * 50, pos[1] + Math.sin(away) * 50]
       }
       boost = me.energy > 40 && losFoes.length > 0
-    } else if (losTarget && losTarget.kind === "mech" && dist(losTarget.pos, me.pos) < P.fightMax) {
+    } else if (P.drops && this.capturing(o)) {
+      this.mode = "capture"
+      const d = this.capturing(o)!
+      move = dist(d.pos, me.pos) > 3 ? this.nav.steerTo(pos, [d.pos[0], d.pos[1]], o.t) : [0, 0]
+    } else if (losTarget && losTarget.kind === "mech" && dist(losTarget.pos, me.pos) < (o.t < P.open && !this.engaging(o, losTarget) ? P.openFight : P.fightMax)) {
       this.mode = "fight"
       move = this.fightHeading(o, losTarget)
     } else {
       const loot = this.lootGoal(o)
       const drop = o.drops.find((d) => d.lands_in < 6 && dist(d.pos, me.pos) < 150 && !this.enemyNear(o, d.pos, 90, false) && this.reachable(d.pos))
-      if (loot) {
+      const dropGo = P.drops ? this.dropGoal(o) : null
+      const crateMem = P.crateR > 45 && o.t < P.crateUntil && this.farmOk(o)
+        ? [...this.crates.values()].filter((c) => dist(c.pos, me.pos) < P.crateR && this.reachable(c.pos)).sort((x, y) => dist(x.pos, me.pos) - dist(y.pos, me.pos))[0]
+        : undefined
+      if (dropGo) {
+        goal = dropGo
+        this.mode = "drop"
+      } else if (loot) {
         goal = loot.goal
         boost = loot.boost
         this.mode = loot.mode
       } else if (drop && hpFrac < 0.95) {
         goal = [drop.pos[0], drop.pos[1]]
         this.mode = "drop"
-      } else if (P.hunt && target && target.kind === "mech") {
+      } else if (P.hunt && o.t >= P.open && target && target.kind === "mech") {
         this.mode = "hunt"
         goal = [target.pos[0], target.pos[1]]
       } else if (losTarget) {
         this.mode = "npc"
         move = this.fightHeading(o, losTarget)
+      } else if (target && target.kind === "npc" && P.farm) {
+        this.mode = "farm"
+        goal = [target.pos[0], target.pos[1]]
       } else {
         const crate = o.crates
-          .filter((c) => dist(c.pos, me.pos) < 45 && this.world.los(this.muzzle(o), [c.pos[0], c.pos[1], c.pos[2] + 1]))
+          .filter((c) => dist(c.pos, me.pos) < Math.min(60, Math.max(45, P.crateR)) && this.world.los(this.muzzle(o), [c.pos[0], c.pos[1], c.pos[2] + 1]))
           .sort((x, y) => dist(x.pos, me.pos) - dist(y.pos, me.pos))[0]
-        if (crate && hpFrac > 0.6) {
+        if (crate && hpFrac > 0.6 && o.t < P.crateUntil) {
           this.mode = "crate"
           target = { id: crate.id, kind: "npc", pos: crate.pos, vel: [0, 0, 0], aim: [0, 0], hp: crate.hp } as ActorObs
+        } else if (crateMem) {
+          this.mode = "cratewalk"
+          goal = [crateMem.pos[0], crateMem.pos[1]]
         }
       }
     }
     if (!move) move = this.nav.steerTo(pos, goal, o.t)
     if (this.mode === "hold" && dist(pos, safe) < 12) move = [0, 0]
-    if (P.avoid && !dodge && this.mode !== "zone") move = this.avoidSteer(o, move, target?.id ?? null)
+    const opening = o.t < P.open
+    if ((P.avoid || opening) && !dodge && this.mode !== "zone") move = this.avoidSteer(o, move, target?.id ?? null)
+    if (opening && P.quiet && !dodge && !boost && ["hold", "loot", "cubes", "hunt"].includes(this.mode)) {
+      const qs = ((this.cfg.sound?.step_speed ?? 5) * 0.92) / (me.stats.walk_speed ?? 11.7)
+      const ml = Math.hypot(move[0], move[1])
+      if (ml > qs) move = [(move[0] / ml) * qs, (move[1] / ml) * qs]
+    }
 
     // stuck / off-grid escape
     const speed = Math.hypot(me.vel[0], me.vel[1])

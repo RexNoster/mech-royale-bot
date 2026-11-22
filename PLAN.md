@@ -91,4 +91,8 @@ The starter does none of these (no lead, no LOS check, fires at anything, walks 
 | 11-22 23:55 | — | at-sim (isolated: Deno --deny-net, scrubbed env), 48 matches seeds 1000–1047, HUNT_KNOW=1: starter 0.54±0.13 (official 1.34); ahmad f29e4d3 1.90±0.24, 1.65 kills, 3456 dealt (official 6.74?) | sim harsh but ordered |
 | 11-22 23:58 | 300a595 | v1 SUBMIT (calibration). sim 1.31±0.18, 0.67 kills, 1411 dealt, gun-only 35/48. check.py PASS p99 3.4 ms | predicted ~4 official; awaiting score |
 | 11-23 00:10 | — | Sim now fully net-denied: sim AND child bots under Deno --deny-net; sim may only spawn deno. Third-party child bots (ahmad Go, py starter) paused. v1 re-baseline 96 seeds (1000–1095): 1.14±0.12, 0.62 kills, 6 zone deaths (stuck ~70 s outside), gun acc 43% vs ahmad 53%, secondary dmg ~140 vs ~1500/match | weapons = biggest gap |
+| 11-23 00:20 | 22ae07c | v2 SUBMIT (Claude-written; Codex stalled on stdin). sim 1.99 vs v1 1.14 (+0.85±0.22 paired 96) | **official 4.45** (v1 official 2.36) → ~2.5 official per sim point here; need sim ≈2.5 for 5.93 |
+| 11-23 00:40 | — | Sweeps (paired, fresh ranges): provoke +0.42/−0.11/+0.21 (96/96/288) → pooled +0.19±0.09, adopt. far bands +0.07, retreat .25/.45 ≈0, flip faster −0.05, avoid −0.01, outnumbered-retreat .8 0.00, no-hunt +0.05 | sim saturating on knobs |
+| 11-23 00:45 | — | Caveat: per Ahmad notes giddy (6.19 official) ≈ his 2.52 bot in sim → sim misranks top bots; official board is the real instrument | |
+| 11-23 00:50 | ba94601 | v3 SUBMIT: v2 + provoke. sim ~2.2–2.3 | pending |
 | 11-23 00:00 | — | Codex v2: fire gate cd≤0.1, laser hold-on-LOS-loss + lethal release, weapon values/seek, cube scoop, unseen-attacker turn, anti-lightning, laser dodge, range bands, mortar solve | pending |
