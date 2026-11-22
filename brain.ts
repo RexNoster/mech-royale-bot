@@ -34,8 +34,8 @@ export const P = {
   gunHi: 70,
   laserLo: 55,
   laserHi: 110,
-  laserLoot: 180,
-  lootEnemyR: 90,
+  laserLoot: 250,
+  lootEnemyR: 50,
   flipMin: 0.25,
   flipVar: 0.45,
   strafeW: 7,
@@ -55,8 +55,8 @@ export const P = {
   adaptLead: 1, // 1: per-opponent lead factor learned from virtual shots
   leadMin: 6,
   wrun: 1, // 1: fetch a laser (or any weapon when gun-only) even mid-fight
-  wrunLaser: 130,
-  wrunAny: 70,
+  wrunLaser: 200,
+  wrunAny: 100,
   open: 0, // seconds of cautious opening (near loot only, quiet walk, avoid idle mechs, no hunt/farm)
   openLoot: 80,
   openFight: 120,

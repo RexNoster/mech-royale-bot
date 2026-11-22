@@ -108,4 +108,8 @@ The starter does none of these (no lead, no LOS check, fires at anything, walks 
 | 11-23 02:20 | 480c81a | v6 official **4.82**. v4/v5/v6 = 4.95/4.76/4.82 → official noise ≈ ±0.1; recent changes ≈ 0 officially | |
 | 11-23 02:22 | — | Ahmad f29e4d3 rebuilt as Go js/wasm, hosted in Deno --deny-net (passes check.py). Sim: ahmad 2.18 (HK0) / 2.28 (HK1) vs our v6 2.47 / 2.51 → no sim mode explains his 6.74; sim cannot rank top bots | official board = instrument |
 | 11-23 02:30 | 962a475 | v7 SUBMIT (real-server test): seek (25 s memory / gunfire) + rim 0.4. Sim −0.20/−0.19 (expected: sim inverted for these classes) | pending |
+| 11-23 02:35 | 962a475 | v7 official **4.69** → seek + rim 0.4 reverted | |
+| 11-23 02:40 | 1becbdb | v8: adaptive lead (real recording: half lead 3.67 m RMS vs full 4.35 m). Official **4.84** | plateau 4.8±0.1 since v4 |
+| 11-23 02:50 | — | Real recording: enemy laser 4/5 hits at 50–150 m = 1260/1665 dmg on a gun-only mech | lasers decide real fights |
+| 11-23 02:52 | 65e2bb9 | v9 SUBMIT (real test): weapon run. Sim +0.19±0.11 / −0.12±0.12 | pending |
 | 11-23 00:00 | — | Codex v2: fire gate cd≤0.1, laser hold-on-LOS-loss + lethal release, weapon values/seek, cube scoop, unseen-attacker turn, anti-lightning, laser dodge, range bands, mortar solve | pending |
