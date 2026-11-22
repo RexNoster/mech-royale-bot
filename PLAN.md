@@ -121,4 +121,6 @@ The starter does none of these (no lead, no LOS check, fires at anything, walks 
 | 11-23 03:45 | 7935327 | v12 official **5.10** (punish + gunCrate neutral) | |
 | 11-23 03:55 | — | noMortar sim −0.07±0.06 (default) / +0.00 (harsh aim) — not submitted. Harsh-aim sim (TIER_AIM .025/.018/.012/.006) also fails to reproduce weapon-run gain (+0.04) → sim abandoned as screen | |
 | 11-23 03:58 | 378b974 | v13 SUBMIT: v12 minus laserDuck/coverReload (coincided with v4→v6 −0.13) | pending |
+| 11-23 04:05 | 378b974 | v13 official **5.45** (+0.35): cover-ducking/cover-reload OFF → disengaging costs real points | NEW BEST |
+| 11-23 04:06 | 8808f5b | v14 SUBMIT (Codex-implemented): retreat <20% hp (outnumbered <30%), never hold fire while retreating | pending |
 | 11-23 00:00 | — | Codex v2: fire gate cd≤0.1, laser hold-on-LOS-loss + lethal release, weapon values/seek, cube scoop, unseen-attacker turn, anti-lightning, laser dodge, range bands, mortar solve | pending |

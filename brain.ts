@@ -28,8 +28,7 @@ export type DecisionInfo = {
 export const P = {
   provoke: 1, // 1: don't shoot mechs that are not engaging us (unless close or weak)
   provokeR: 50,
-  retreatHp: 0.2,
-  retreatFire: 1, // 1 = keep shooting while retreating
+  retreatHp: 0.33,
   returnHp: 0.75,
   gunLo: 40,
   gunHi: 70,
@@ -46,7 +45,9 @@ export const P = {
   rimLate: 0.45,
   lightV: 2.6,
   upDef: 0,
-  cubeR: 70,
+  cubeR: 150,
+  cubeEnemyR: 35, // skip a cube only if an enemy mech in LOS is within this distance of it
+  cubeFight: 25, // mid-fight cube run radius, 0 = off
   coverHold: 0, // 1: while idle, wait at the least-exposed spot near the rim goal
   holdR: 28,
   coverReload: 0,
@@ -76,7 +77,7 @@ export const P = {
   drops: 0, // 1: capture supply drops
   avoidR: 70,
   avoidW: 3,
-  outHp: 0.3, // retreat with 2+ attackers in LOS below this hp fraction
+  outHp: 0.5, // retreat with 2+ attackers in LOS below this hp fraction
 }
 try {
   const env = (globalThis as any).process?.env?.BOT_PARAMS
@@ -462,7 +463,7 @@ export class Brain {
     for (const c of this.cubes.values()) {
       if (!this.reachable(c.pos)) continue
       const d = dist(c.pos, me.pos)
-      if (d > P.cubeR || this.enemyNear(o, c.pos, 70)) continue
+      if (d > P.cubeR || this.enemyNear(o, c.pos, P.cubeEnemyR)) continue
       const s = 120 - d
       if (s > bestScore) {
         bestScore = s
@@ -860,6 +861,16 @@ export class Brain {
     } else if (losTarget && losTarget.kind === "mech" && dist(losTarget.pos, me.pos) < (o.t < P.open && !this.engaging(o, losTarget) ? P.openFight : P.fightMax)) {
       this.mode = "fight"
       move = this.fightHeading(o, losTarget)
+      if (P.cubeFight > 0 && hpFrac > 0.4) {
+        const cube = [...this.cubes.values()]
+          .filter((c) => this.reachable(c.pos) && dist(c.pos, me.pos) <= P.cubeFight)
+          .sort((a, b) => dist(a.pos, me.pos) - dist(b.pos, me.pos))[0]
+        if (cube) {
+          this.mode = "cuberun"
+          move = null
+          goal = [cube.pos[0], cube.pos[1]]
+        }
+      }
     } else {
       const loot = this.lootGoal(o)
       const drop = o.drops.find((d) => d.lands_in < 6 && dist(d.pos, me.pos) < 150 && !this.enemyNear(o, d.pos, 90, false) && this.reachable(d.pos))
@@ -948,7 +959,7 @@ export class Brain {
     const li = me.weapons.findIndex((w) => w?.kind === "laser")
     const laser = li >= 0 ? me.weapons[li] : null
     const charging = !!laser && (laser.charge ?? 0) > 0
-    const holdFire = P.retreatFire ? false : retreat && !(o.t - this.lastHitAt < 1.2)
+    const holdFire = retreat && !(o.t - this.lastHitAt < 1.2)
     const fireTarget = target && (losTarget === target || this.mode === "crate") ? target : null
     const aimTarget = fireTarget ?? (charging && target ? target : null)
 
