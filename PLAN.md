@@ -86,3 +86,5 @@ The starter does none of these (no lead, no LOS check, fires at anything, walks 
 | --- | --- | --- | --- |
 | 11-22 23:30 | 31d9706 | official TS starter baseline | official python starter scored 1.34 (user) |
 | | | Benchmark: ahmad-ovh/Buildathon @ f29e4d3b (HEAD 2026-11-22 14:57 +0800, Apex-Go v3; commit behind 6.74 unverified) | read-only |
+| 11-22 23:20 | — | Live board (builders-4): #1 Ahmad 6.74, #2 6.63, #32 5.93, #33 5.92, #34 5.91. Practice = 96 matches, FRESH seeds per submission, 4 subs/h, best score counts → resubmitting a strong build has max-of-N upside. Cutoff Mon 05:00 NZDT. | |
+| 11-22 23:35 | — | Codex implementing v1 (PLAN scope 1–13) | pending |
