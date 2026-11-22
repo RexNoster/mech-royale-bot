@@ -130,4 +130,6 @@ The starter does none of these (no lead, no LOS check, fires at anything, walks 
 | 11-23 04:20 | a0d1b61 | v16 SUBMIT: v13 + retreat earlier (<40%, outnumbered <60%, return >85%) — opposite of v14 | pending |
 | 11-23 04:30 | a0d1b61 | v16 official **4.92** (−0.53) → v13 retreat thresholds bracketed (v14 5.03 / v16 4.92) | keep v13 |
 | 11-23 04:32 | 555ca6c | v17 SUBMIT: v13 + laser band 90–150 m | pending |
+| 11-23 04:42 | 555ca6c | v17 official **5.22** (−0.23): farther laser band hurts | revert |
+| 11-23 04:44 | 0edaca8 | v18 SUBMIT: v13 + closer bands (gun 28–55, laser 40–85) | pending |
 | 11-23 00:00 | — | Codex v2: fire gate cd≤0.1, laser hold-on-LOS-loss + lethal release, weapon values/seek, cube scoop, unseen-attacker turn, anti-lightning, laser dodge, range bands, mortar solve | pending |

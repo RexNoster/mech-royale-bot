@@ -30,10 +30,10 @@ export const P = {
   provokeR: 50,
   retreatHp: 0.33,
   returnHp: 0.75,
-  gunLo: 28,
-  gunHi: 55,
-  laserLo: 40,
-  laserHi: 85,
+  gunLo: 40,
+  gunHi: 70,
+  laserLo: 55,
+  laserHi: 110,
   laserLoot: 180,
   lootEnemyR: 90,
   flipMin: 0.25,
@@ -62,6 +62,7 @@ export const P = {
   punish: 1, // 1: track enemy laser shots; no ducking + target priority while their laser recharges
   punishW: 25,
   gunCrate: 1, // 1: while gun-only, crack crates within 70 m for their 50% weapon drop (unless an engaging mech is in LOS)
+  dodge: 0, // 1: sidestep+boost when a visible laser charge is aimed at us
   open: 0, // seconds of cautious opening (near loot only, quiet walk, avoid idle mechs, no hunt/farm)
   openLoot: 80,
   openFight: 120,
@@ -818,7 +819,7 @@ export class Brain {
     let move: Vec2 | null = null
     let boost = false
     this.mode = "hold"
-    const dh = this.dodgeHeading(o)
+    const dh = P.dodge ? this.dodgeHeading(o) : null
     if (zoneUrgent) {
       this.mode = "zone"
       boost = outside && me.energy > 20
