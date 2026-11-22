@@ -136,4 +136,14 @@ The starter does none of these (no lead, no LOS check, fires at anything, walks 
 | 11-23 04:51 | 36bcd2e | v19 SUBMIT: v13 + laser dodge off | pending |
 | 11-23 05:00 | 36bcd2e | v19 official **5.17** (−0.28): dodge helps, kept | v13 local optimum |
 | 11-23 05:06 | d806391 | v20 SUBMIT: v13 + weapon run 160/85 m | pending |
+| 11-23 05:20 | d806391 | v20 official **5.03** (−0.42): longer weapon run hurts | |
+| 11-23 05:20 | 3195a4f | v21 SUBMIT: v13 + strafe flips 0.12–0.28 s (as #1) | pending |
+
+### Strongest eligible version
+**v13 = 378b974679bc49184d5e1c043c124e97e27bef03 — official 5.45** (near-identical v15 scored 5.42).
+Real-server lessons (official, noise ≈ ±0.05 for near-identical builds): provoke filter + (v3), weapon run + (v9),
+removing cover-ducking/cover-reload + (v13); v13 is a local optimum — retreat earlier/later, fight bands closer/farther,
+dodge off, longer weapon run, edge/centre waiting, seek all scored lower. The local sim tracked combat basics (v1–v4)
+but not positioning/disengagement changes, and ranks #1's 6.74 build below ours.
+
 | 11-23 00:00 | — | Codex v2: fire gate cd≤0.1, laser hold-on-LOS-loss + lethal release, weapon values/seek, cube scoop, unseen-attacker turn, anti-lightning, laser dodge, range bands, mortar solve | pending |
