@@ -54,6 +54,7 @@ export const P = {
   seekHp: 0.65,
   adaptLead: 1, // 1: per-opponent lead factor learned from virtual shots
   leadMin: 6,
+  leadDef: 0.65, // starting lead factor before per-opponent learning (Ahmad v2 LeadDamp 0.65)
   wrun: 1, // 1: fetch a laser (or any weapon when gun-only) even mid-fight
   wrunLaser: 130,
   wrunAny: 70,
@@ -62,7 +63,7 @@ export const P = {
   punish: 1, // 1: track enemy laser shots; no ducking + target priority while their laser recharges
   punishW: 25,
   gunCrate: 1, // 1: while gun-only, crack crates within 70 m for their 50% weapon drop (unless an engaging mech is in LOS)
-  open: 0, // seconds of cautious opening (near loot only, quiet walk, avoid idle mechs, no hunt/farm)
+  open: 24, // seconds of cautious opening (near loot only, quiet walk, avoid idle mechs, no hunt/farm)
   openLoot: 80,
   openFight: 120,
   quiet: 1,
@@ -614,9 +615,9 @@ export class Brain {
 
   static LEADS = [0, 0.5, 1]
   leadK(id: number) {
-    if (!P.adaptLead) return 1
+    if (!P.adaptLead) return P.leadDef
     const r = this.leadErr.get(id)
-    if (!r || r.n < P.leadMin) return 1
+    if (!r || r.n < P.leadMin) return P.leadDef
     let bi = 2
     for (let i = 0; i < 3; i++) if (r.e[i] < r.e[bi] * 0.92) bi = i
     return Brain.LEADS[bi]
