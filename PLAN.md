@@ -105,4 +105,7 @@ The starter does none of these (no lead, no LOS check, fires at anything, walks 
 | 11-23 01:55 | 748c623 | v5 official **4.76** (pred ~5.6) → rim/positioning gains in sim do NOT transfer (sim squad parks at 0.6 r of next circle); treat sim positioning results as untrusted; combat changes have transferred | revert rim |
 | 11-23 02:10 | — | lightV 7 −0.22±0.08, upDef −0.07, cubeR110 +0.12/−0.00, coverHold too slow (drop) | |
 | 11-23 02:15 | 480c81a | v6 SUBMIT: rim 0.6 + laserDuck (+0.13±0.06) + coverReload (+0.07±0.09) | pending |
+| 11-23 02:20 | 480c81a | v6 official **4.82**. v4/v5/v6 = 4.95/4.76/4.82 → official noise ≈ ±0.1; recent changes ≈ 0 officially | |
+| 11-23 02:22 | — | Ahmad f29e4d3 rebuilt as Go js/wasm, hosted in Deno --deny-net (passes check.py). Sim: ahmad 2.18 (HK0) / 2.28 (HK1) vs our v6 2.47 / 2.51 → no sim mode explains his 6.74; sim cannot rank top bots | official board = instrument |
+| 11-23 02:30 | 962a475 | v7 SUBMIT (real-server test): seek (25 s memory / gunfire) + rim 0.4. Sim −0.20/−0.19 (expected: sim inverted for these classes) | pending |
 | 11-23 00:00 | — | Codex v2: fire gate cd≤0.1, laser hold-on-LOS-loss + lethal release, weapon values/seek, cube scoop, unseen-attacker turn, anti-lightning, laser dodge, range bands, mortar solve | pending |

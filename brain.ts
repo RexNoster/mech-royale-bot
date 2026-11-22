@@ -41,7 +41,7 @@ export const P = {
   strafeW: 7,
   hunt: 1,
   fightMax: 240,
-  rim: 0.4, // where in the next circle we wait (fraction of its radius, toward our side)
+  rim: 0.6, // where in the next circle we wait (fraction of its radius, toward our side)
   rimLate: 0.45,
   lightV: 2.6,
   upDef: 0,
@@ -50,8 +50,10 @@ export const P = {
   holdR: 28,
   coverReload: 1,
   laserDuck: 1,
-  seek: 25, // 1+: seconds of enemy memory to go looking for fights (0 = off)
+  seek: 0, // 1+: seconds of enemy memory to go looking for fights (0 = off)
   seekHp: 0.65,
+  adaptLead: 1, // 1: per-opponent lead factor learned from virtual shots
+  leadMin: 6,
   open: 0, // seconds of cautious opening (near loot only, quiet walk, avoid idle mechs, no hunt/farm)
   openLoot: 80,
   openFight: 120,
@@ -102,6 +104,8 @@ export class Brain {
   escapeDir: Vec2 = [1, 0]
   lastSound: { bearing: number; t: number } | null = null
   scanPhase = 0
+  vshots: { id: number; due: number; preds: [number, number][] }[] = []
+  leadErr = new Map<number, { e: number[]; n: number; lastShot: number }>()
   seen = new Map<number, { pos: Vec3; t: number }>()
   loud: { pos: Vec2; t: number } | null = null
   coverCache: { t: number; goal: Vec2 | null } | null = null
@@ -241,6 +245,7 @@ export class Brain {
     }
     if ([...this.tracks.values()].some((v) => v.los && v.actor.kind === "mech")) this.lastLosAt = o.t
     for (const a of o.mechs) if (a.kind === "mech") this.seen.set(a.id, { pos: a.pos, t: o.t })
+    if (P.adaptLead) this.learnLead(o)
     for (const e of o.events) if (e.type === "kill") this.seen.delete(e.target)
     for (const s of o.sounds) {
       if (s.kind === "gun" || s.kind === "laser" || s.kind === "lightning" || s.kind === "mortar") {
@@ -315,13 +320,14 @@ export class Brain {
     const range = w.stats.range ?? 0
     const c = this.center(a)
     const latency = 0.1 + clamp(w.cooldown ?? 0, 0, 0.1)
+    const k = Number.isFinite(speed) ? this.leadK(a.id) : 1
     let t = (Number.isFinite(speed) ? Math.hypot(c[0] - m[0], c[1] - m[1], c[2] - m[2]) / speed : 0) + latency
     let px = c[0]
     let py = c[1]
     let pz = c[2]
     for (let i = 0; i < 3; i++) {
-      px = c[0] + clamp(a.vel[0] * t, -60, 60)
-      py = c[1] + clamp(a.vel[1] * t, -60, 60)
+      px = c[0] + clamp(a.vel[0] * t * k, -60, 60)
+      py = c[1] + clamp(a.vel[1] * t * k, -60, 60)
       pz = c[2] + clamp(a.vel[2] * t, -10, 10)
       const groundHere = this.world.groundZ(px, py)
       if (pz - c[2] + a.pos[2] < groundHere) pz = groundHere + (c[2] - a.pos[2])
@@ -586,6 +592,55 @@ export class Brain {
     }
     this.hold = { t: o.t, base, spot: best }
     return best
+  }
+
+  static LEADS = [0, 0.5, 1]
+  leadK(id: number) {
+    if (!P.adaptLead) return 1
+    const r = this.leadErr.get(id)
+    if (!r || r.n < P.leadMin) return 1
+    let bi = 2
+    for (let i = 0; i < 3; i++) if (r.e[i] < r.e[bi] * 0.92) bi = i
+    return Brain.LEADS[bi]
+  }
+
+  /** score the lead options against where each visible enemy really was when a bullet fired now would arrive */
+  learnLead(o: Observation) {
+    const byId = new Map(o.mechs.map((m) => [m.id, m]))
+    const keep: typeof this.vshots = []
+    for (const v of this.vshots) {
+      if (o.t < v.due) {
+        keep.push(v)
+        continue
+      }
+      if (o.t - v.due > 0.15) continue
+      const a = byId.get(v.id)
+      if (!a) continue
+      const r = this.leadErr.get(v.id) ?? { e: [0, 0, 0], n: 0, lastShot: -1 }
+      for (let i = 0; i < 3; i++) {
+        const err = (a.pos[0] - v.preds[i][0]) ** 2 + (a.pos[1] - v.preds[i][1]) ** 2
+        r.e[i] = r.n === 0 ? err : r.e[i] * 0.9 + err * 0.1
+      }
+      r.n++
+      this.leadErr.set(v.id, r)
+    }
+    this.vshots = keep
+    const speed = this.cfg.weapons?.gun?.speed ?? 252
+    for (const a of o.mechs) {
+      if (a.kind !== "mech") continue
+      const tr = this.tracks.get(a.id)
+      if (!tr || !tr.los) continue
+      const r = this.leadErr.get(a.id) ?? { e: [0, 0, 0], n: 0, lastShot: -1 }
+      if (o.t - r.lastShot < 0.2) continue
+      r.lastShot = o.t
+      this.leadErr.set(a.id, r)
+      const d = dist(a.pos, o.self.pos)
+      const tf = Math.min(1.2, d / speed + 0.1)
+      // resolve on a decision tick: round the flight time to the 0.1 s decision grid
+      const due = o.t + Math.max(0.1, Math.round(tf * 10) / 10)
+      const T = due - o.t
+      this.vshots.push({ id: a.id, due, preds: Brain.LEADS.map((k) => [a.pos[0] + a.vel[0] * T * k, a.pos[1] + a.vel[1] * T * k] as [number, number]) })
+    }
   }
 
   /** where to go looking for a fight: last known enemy (<= P.seek s old) or recent gunfire, inside the zone */
