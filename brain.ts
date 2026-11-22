@@ -34,8 +34,8 @@ export const P = {
   gunHi: 70,
   laserLo: 55,
   laserHi: 110,
-  laserLoot: 250,
-  lootEnemyR: 50,
+  laserLoot: 180,
+  lootEnemyR: 90,
   flipMin: 0.25,
   flipVar: 0.45,
   strafeW: 7,
@@ -55,8 +55,10 @@ export const P = {
   adaptLead: 1, // 1: per-opponent lead factor learned from virtual shots
   leadMin: 6,
   wrun: 1, // 1: fetch a laser (or any weapon when gun-only) even mid-fight
-  wrunLaser: 200,
-  wrunAny: 100,
+  wrunLaser: 130,
+  wrunAny: 70,
+  earlyT: 40, // opening laser rush: until this time, go further for a laser while nothing engages us nearby
+  earlyLaser: 220,
   open: 0, // seconds of cautious opening (near loot only, quiet walk, avoid idle mechs, no hunt/farm)
   openLoot: 80,
   openFight: 120,
@@ -674,7 +676,8 @@ export class Brain {
     let bestD = Infinity
     for (const p of this.pickups.values()) {
       if (!this.wantPickup(o, p.kind) || !this.reachable(p.pos)) continue
-      const lim = p.kind === "laser" && sec.kind !== "laser" ? P.wrunLaser : sec.kind === null ? P.wrunAny : 0
+      let lim = p.kind === "laser" && sec.kind !== "laser" ? P.wrunLaser : sec.kind === null ? P.wrunAny : 0
+      if (p.kind === "laser" && sec.kind !== "laser" && o.t < P.earlyT && !this.enemies().some((v) => o.t - v.last < 4 && dist(v.actor.pos, o.self.pos) < 80 && this.engaging(o, v.actor))) lim = Math.max(lim, P.earlyLaser)
       const d = dist(p.pos, o.self.pos)
       if (d > lim || this.enemyNear(o, p.pos, 25, false)) continue
       if (d < bestD) {

@@ -112,4 +112,6 @@ The starter does none of these (no lead, no LOS check, fires at anything, walks 
 | 11-23 02:40 | 1becbdb | v8: adaptive lead (real recording: half lead 3.67 m RMS vs full 4.35 m). Official **4.84** | plateau 4.8±0.1 since v4 |
 | 11-23 02:50 | — | Real recording: enemy laser 4/5 hits at 50–150 m = 1260/1665 dmg on a gun-only mech | lasers decide real fights |
 | 11-23 02:52 | 65e2bb9 | v9 SUBMIT (real test): weapon run. Sim +0.19±0.11 / −0.12±0.12 | pending |
+| 11-23 02:55 | 65e2bb9 | v9 official **5.09** (best; +0.25 vs 4.83 plateau ≈2.5σ) → weapon acquisition is the real lever | BEST |
+| 11-23 02:56 | 1ffc376 | v10 SUBMIT: weapon run 200/100 m, laserLoot 250, lootEnemyR 50 | pending |
 | 11-23 00:00 | — | Codex v2: fire gate cd≤0.1, laser hold-on-LOS-loss + lethal release, weapon values/seek, cube scoop, unseen-attacker turn, anti-lightning, laser dodge, range bands, mortar solve | pending |
