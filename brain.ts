@@ -44,7 +44,7 @@ export const P = {
   rim: 0.6, // where in the next circle we wait (fraction of its radius, toward our side)
   rimLate: 0.45,
   lightV: 2.6,
-  upDef: 1,
+  upDef: 0,
   cubeR: 70,
   coverHold: 0, // 1: while idle, wait at the least-exposed spot near the rim goal
   holdR: 28,
@@ -67,9 +67,9 @@ export const P = {
   openFight: 120,
   quiet: 1,
   avoid: 0, // 1: steer away from mechs that are not engaging us
-  farm: 1, // 1: farm NPC drones (2 cubes) when no mech engages us
+  farm: 0, // 1: farm NPC drones (2 cubes) when no mech engages us
   farmR: 120,
-  crateR: 80, // shoot/walk to crates within this range
+  crateR: 0, // shoot/walk to crates within this range
   crateUntil: 150,
   noMortar: 0, // 1: never take mortars
   drops: 0, // 1: capture supply drops
