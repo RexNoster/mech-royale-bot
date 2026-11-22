@@ -87,4 +87,8 @@ The starter does none of these (no lead, no LOS check, fires at anything, walks 
 | 11-22 23:30 | 31d9706 | official TS starter baseline | official python starter scored 1.34 (user) |
 | | | Benchmark: ahmad-ovh/Buildathon @ f29e4d3b (HEAD 2026-11-22 14:57 +0800, Apex-Go v3; commit behind 6.74 unverified) | read-only |
 | 11-22 23:20 | — | Live board (builders-4): #1 Ahmad 6.74, #2 6.63, #32 5.93, #33 5.92, #34 5.91. Practice = 96 matches, FRESH seeds per submission, 4 subs/h, best score counts → resubmitting a strong build has max-of-N upside. Cutoff Mon 05:00 NZDT. | |
-| 11-22 23:35 | — | Codex implementing v1 (PLAN scope 1–13) | pending |
+| 11-22 23:35 | — | Codex implementing v1 (PLAN scope 1–13) | done |
+| 11-22 23:55 | — | at-sim (isolated: Deno --deny-net, scrubbed env), 48 matches seeds 1000–1047, HUNT_KNOW=1: starter 0.54±0.13 (official 1.34); ahmad f29e4d3 1.90±0.24, 1.65 kills, 3456 dealt (official 6.74?) | sim harsh but ordered |
+| 11-22 23:58 | 300a595 | v1 SUBMIT (calibration). sim 1.31±0.18, 0.67 kills, 1411 dealt, gun-only 35/48. check.py PASS p99 3.4 ms | predicted ~4 official; awaiting score |
+| 11-23 00:10 | — | Sim now fully net-denied: sim AND child bots under Deno --deny-net; sim may only spawn deno. Third-party child bots (ahmad Go, py starter) paused. v1 re-baseline 96 seeds (1000–1095): 1.14±0.12, 0.62 kills, 6 zone deaths (stuck ~70 s outside), gun acc 43% vs ahmad 53%, secondary dmg ~140 vs ~1500/match | weapons = biggest gap |
+| 11-23 00:00 | — | Codex v2: fire gate cd≤0.1, laser hold-on-LOS-loss + lethal release, weapon values/seek, cube scoop, unseen-attacker turn, anti-lightning, laser dodge, range bands, mortar solve | pending |
