@@ -138,7 +138,8 @@ The starter does none of these (no lead, no LOS check, fires at anything, walks 
 | 11-23 05:06 | d806391 | v20 SUBMIT: v13 + weapon run 160/85 m | pending |
 | 11-23 05:20 | d806391 | v20 official **5.03** (−0.42): longer weapon run hurts | |
 | 11-23 05:20 | 3195a4f | v21: v13 + strafe flips 0.12–0.28 s (as #1). Official **5.31** | |
-| 11-23 05:26 | afb285d | v22 SUBMIT (last slot): v13 + defensive upgrades first | pending |
+| 11-23 05:26 | afb285d | v22: v13 + defensive upgrades first. Official **5.27** | |
+| 11-23 05:34 | d2b7006 | v23 (if a slot opens before 05:00): v13 + drone farming / crate-walking off | pending |
 
 ### Strongest eligible version
 **v13 = 378b974679bc49184d5e1c043c124e97e27bef03 — official 5.45** (near-identical v15 scored 5.42).
